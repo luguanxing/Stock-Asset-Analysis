@@ -14,10 +14,10 @@ calculating realtime user_asset, user_asset tending, profit/loss trending with F
 CREATE TABLE `tb_user_cash` (  `uid` int(64) NOT NULL,  `cash_value` double DEFAULT NULL,  PRIMARY KEY (`uid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 /*用户持仓表*/
-CREATE TABLE `tb_user_position` (  `uid` int(64) NOT NULL,  `stock_id` int(11) NOT NULL,  `quantity` double DEFAULT NULL,  PRIMARY KEY (`uid`,`stock_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+CREATE TABLE `tb_user_position` (  `uid` int(64) NOT NULL,  `stock_id` varchar(128) NOT NULL,  `quantity` double DEFAULT NULL,  PRIMARY KEY (`uid`,`stock_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 /*股票行情报价表*/
-CREATE TABLE `tb_stock_quotation` (  `stock_id` int(11) NOT NULL,  `price` double DEFAULT NULL,  PRIMARY KEY (`stock_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `tb_stock_quotation` (  `stock_id` varchar(128) NOT NULL,  `price` double DEFAULT NULL,  PRIMARY KEY (`stock_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*用户流水表*/
 CREATE TABLE `tb_user_inout` (  `uid` int(64) NOT NULL,  `inout_type` varchar(32) NOT NULL,  `inout_value` double DEFAULT NULL,  PRIMARY KEY (`uid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
