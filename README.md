@@ -20,7 +20,7 @@ CREATE TABLE `tb_user_position` (  `uid` int(64) NOT NULL,  `stock_id` varchar(1
 CREATE TABLE `tb_stock_quotation` (  `stock_id` varchar(128) NOT NULL,  `price` double DEFAULT NULL,  PRIMARY KEY (`stock_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*用户流水表*/
-CREATE TABLE `tb_user_inout` (  `uid` int(64) NOT NULL,  `inout_type` varchar(32) NOT NULL,  `inout_value` double DEFAULT NULL,  PRIMARY KEY (`uid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+CREATE TABLE `tb_user_inout` (  `id` int(64) NOT NULL,  `uid` int(64) NOT NULL,  `inout_type` varchar(32) NOT NULL,  `inout_value` double DEFAULT NULL,  PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 ```
 
 ## 输出数据准备 Data Outpt Preparetion

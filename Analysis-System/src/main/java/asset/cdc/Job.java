@@ -70,6 +70,7 @@ public class Job {
                 "");
         tEnv.executeSql("" +
                 "CREATE TABLE mysql_user_inout (\n" +
+                " id INT NOT NULL,\n" +
                 " uid INT NOT NULL,\n" +
                 " inout_type STRING,\n" +
                 " inout_value double\n" +
@@ -83,10 +84,70 @@ public class Job {
                 " 'table-name' = '" + properties.get("input.tb.inout") + "'\n" +
                 ")" +
                 "");
+        tEnv.executeSql("" +
+                "CREATE TABLE kafka_user_cash (\n" +
+                "  uid INT NOT NULL,\n" +
+                "  cash_value double,\n" +
+                "  PRIMARY KEY (uid) NOT ENFORCED\n" +
+                ") WITH (\n" +
+                "  'connector' = 'upsert-kafka',\n" +
+                "  'topic' = '"+ properties.get("mq.tb.cash") + "',\n" +
+                "  'properties.bootstrap.servers' = '"+ properties.get("mq.host") + "',\n" +
+                "  'key.format' = 'json',\n" +
+                "  'value.format' = 'json'\n" +
+                ")" +
+                "");
+        tEnv.executeSql("" +
+                "CREATE TABLE kafka_user_position (\n" +
+                " uid INT NOT NULL,\n" +
+                " stock_id STRING NOT NULL,\n" +
+                " quantity double,\n" +
+                "  PRIMARY KEY (uid, stock_id) NOT ENFORCED\n" +
+                ") WITH (\n" +
+                "  'connector' = 'upsert-kafka',\n" +
+                "  'topic' = '"+ properties.get("mq.tb.position") + "',\n" +
+                "  'properties.bootstrap.servers' = '"+ properties.get("mq.host") + "',\n" +
+                "  'key.format' = 'json',\n" +
+                "  'value.format' = 'json'\n" +
+                ")" +
+                "");
+        tEnv.executeSql("" +
+                "CREATE TABLE kafka_stock_quotation (\n" +
+                " stock_id STRING NOT NULL,\n" +
+                " price double,\n" +
+                "  PRIMARY KEY (stock_id) NOT ENFORCED\n" +
+                ") WITH (\n" +
+                "  'connector' = 'upsert-kafka',\n" +
+                "  'topic' = '"+ properties.get("mq.tb.quotation") + "',\n" +
+                "  'properties.bootstrap.servers' = '"+ properties.get("mq.host") + "',\n" +
+                "  'key.format' = 'json',\n" +
+                "  'value.format' = 'json'\n" +
+                ")" +
+                "");
+        tEnv.executeSql("" +
+                "CREATE TABLE kafka_user_inout (\n" +
+                " id INT NOT NULL,\n" +
+                " uid INT NOT NULL,\n" +
+                " inout_type STRING,\n" +
+                " inout_value double,\n" +
+                "  PRIMARY KEY (id) NOT ENFORCED\n" +
+                ") WITH (\n" +
+                "  'connector' = 'upsert-kafka',\n" +
+                "  'topic' = '"+ properties.get("mq.tb.inout") + "',\n" +
+                "  'properties.bootstrap.servers' = '"+ properties.get("mq.host") + "',\n" +
+                "  'key.format' = 'json',\n" +
+                "  'value.format' = 'json'\n" +
+                ")" +
+                "");
 
 
-        tEnv.executeSql("select * from mysql_user_inout").print();
-        env.execute();
+
+        statementSet.addInsertSql("insert into kafka_user_cash select * from mysql_user_cash");
+        statementSet.addInsertSql("insert into kafka_user_position select * from mysql_user_position");
+        statementSet.addInsertSql("insert into kafka_stock_quotation select * from mysql_stock_quotation");
+        statementSet.addInsertSql("insert into kafka_user_inout select * from mysql_user_inout");
+
+        statementSet.execute();
     }
 
 }
