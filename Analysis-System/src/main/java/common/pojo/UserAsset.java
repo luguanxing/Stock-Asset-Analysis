@@ -5,8 +5,9 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserPosition {
+public class UserAsset {
     Integer uid;
-    String stockId;
-    Double quantity;
+    Double cashValue;
+    Double positionValue;
+    Double totalValue;
 }

@@ -5,8 +5,10 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserPosition {
+public class UserPositionEtl {
     Integer uid;
     String stockId;
     Double quantity;
+    Double price;
+    Double position_value;
 }

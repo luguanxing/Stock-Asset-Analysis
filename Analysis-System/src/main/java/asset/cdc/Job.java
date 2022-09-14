@@ -24,7 +24,7 @@ public class Job {
         TableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
         StatementSet statementSet = tEnv.createStatementSet();
 
-        // 读取业务数据，同步到实时数仓消息队列中
+        // 构建业务数据表和目标表
         tEnv.executeSql("" +
                 "CREATE TABLE mysql_user_cash (\n" +
                 " uid INT NOT NULL,\n" +
@@ -140,8 +140,7 @@ public class Job {
                 ")" +
                 "");
 
-
-
+        // 同步到实时数仓消息队列中
         statementSet.addInsertSql("insert into kafka_user_cash select * from mysql_user_cash");
         statementSet.addInsertSql("insert into kafka_user_position select * from mysql_user_position");
         statementSet.addInsertSql("insert into kafka_stock_quotation select * from mysql_stock_quotation");
