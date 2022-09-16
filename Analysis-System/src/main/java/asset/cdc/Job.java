@@ -25,6 +25,18 @@ public class Job {
         StatementSet statementSet = tEnv.createStatementSet();
 
         // 构建业务数据表和目标表
+        createSourceSinkTable(tEnv);
+
+        // 同步到实时数仓消息队列中
+        statementSet.addInsertSql("insert into kafka_user_cash select * from mysql_user_cash");
+        statementSet.addInsertSql("insert into kafka_user_position select * from mysql_user_position");
+        statementSet.addInsertSql("insert into kafka_stock_quotation select * from mysql_stock_quotation");
+        statementSet.addInsertSql("insert into kafka_user_inout select * from mysql_user_inout");
+
+        statementSet.execute();
+    }
+
+    private static void createSourceSinkTable(TableEnvironment tEnv) {
         tEnv.executeSql("" +
                 "CREATE TABLE mysql_user_cash (\n" +
                 " uid INT NOT NULL,\n" +
@@ -139,14 +151,6 @@ public class Job {
                 "  'value.format' = 'json'\n" +
                 ")" +
                 "");
-
-        // 同步到实时数仓消息队列中
-        statementSet.addInsertSql("insert into kafka_user_cash select * from mysql_user_cash");
-        statementSet.addInsertSql("insert into kafka_user_position select * from mysql_user_position");
-        statementSet.addInsertSql("insert into kafka_stock_quotation select * from mysql_stock_quotation");
-        statementSet.addInsertSql("insert into kafka_user_inout select * from mysql_user_inout");
-
-        statementSet.execute();
     }
 
 }
