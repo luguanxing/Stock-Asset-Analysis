@@ -14,6 +14,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionWindows;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.StatementSet;
@@ -86,7 +87,7 @@ public class Job {
                 .filter((FilterFunction<Tuple2<Boolean, StockQuotation>>) quotationTuple2 -> quotationTuple2.f0)
                 .map((MapFunction<Tuple2<Boolean, StockQuotation>, StockQuotation>) quotationTuple2 -> quotationTuple2.f1)
                 .keyBy((KeySelector<StockQuotation, String>) stockQuotation -> stockQuotation.getStock_id())
-                .window(ProcessingTimeSessionWindows.withGap(Time.seconds(30)))
+                .window(TumblingProcessingTimeWindows.of(Time.seconds(30)))
                 .reduce((ReduceFunction<StockQuotation>) (q1, q2) -> {
                     if (q1.getKafka_offset() < q2.getKafka_offset()) {
                         return q2;
