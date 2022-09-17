@@ -108,7 +108,8 @@ public class OperatorBuilder {
                         uid,
                         cashValue,
                         positionValue,
-                        cashValue + positionValue
+                        cashValue + positionValue,
+                        String.format("%d%d", System.currentTimeMillis(), System.nanoTime())
                 );
             }
         };
