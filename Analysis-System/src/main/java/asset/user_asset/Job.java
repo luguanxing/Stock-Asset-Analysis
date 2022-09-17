@@ -12,13 +12,13 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.ProcessingTimeSessionWindows;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.StatementSet;
-import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 public class Job {
@@ -37,64 +37,9 @@ public class Job {
         env.setParallelism(1);
 
         // 读取实时数仓消息队列中钱和货数据，做session窗口保证数据稳定性
-        var cashStream = stEnv
-                .toRetractStream(getCashTable(stEnv), UserCash.class)
-                .keyBy((KeySelector<Tuple2<Boolean, UserCash>, Integer>) cashTuple2 -> cashTuple2.f1.getUid())
-                .window(ProcessingTimeSessionWindows.withGap(Time.seconds(1)))
-                .reduce((ReduceFunction<Tuple2<Boolean, UserCash>>) (c1, c2) -> {
-                    Boolean dml1 = c1.f0;
-                    Boolean dml2 = c2.f0;
-                    UserCash cash1 = c1.f1;
-                    UserCash cash2 = c2.f1;
-                    if (cash1.getKafka_offset() < cash2.getKafka_offset()) {
-                        return c2;
-                    } else if (cash1.getKafka_offset() > cash2.getKafka_offset()) {
-                        return c1;
-                    } else {
-                        if (!dml1) {
-                            return c1;
-                        }
-                        if (!dml2) {
-                            return c2;
-                        }
-                        return c2;
-                    }
-                });
-        var positionStream = stEnv
-                .toRetractStream(getPositionTable(stEnv), UserPosition.class)
-                .keyBy((KeySelector<Tuple2<Boolean, UserPosition>, Integer>) cashTuple2 -> cashTuple2.f1.getUid())
-                .window(ProcessingTimeSessionWindows.withGap(Time.seconds(1)))
-                .reduce((ReduceFunction<Tuple2<Boolean, UserPosition>>) (p1, p2) -> {
-                    Boolean dml1 = p1.f0;
-                    Boolean dml2 = p2.f0;
-                    UserPosition position1 = p1.f1;
-                    UserPosition postion2 = p2.f1;
-                    if (position1.getKafka_offset() < postion2.getKafka_offset()) {
-                        return p2;
-                    } else if (position1.getKafka_offset() > postion2.getKafka_offset()) {
-                        return p1;
-                    } else {
-                        if (!dml1) {
-                            return p1;
-                        }
-                        if (!dml2) {
-                            return p2;
-                        }
-                        return p2;
-                    }
-                });
-        var quotationStream = stEnv.toRetractStream(getQuotationTable(stEnv), StockQuotation.class)
-                .filter((FilterFunction<Tuple2<Boolean, StockQuotation>>) quotationTuple2 -> quotationTuple2.f0)
-                .map((MapFunction<Tuple2<Boolean, StockQuotation>, StockQuotation>) quotationTuple2 -> quotationTuple2.f1)
-                .keyBy((KeySelector<StockQuotation, String>) stockQuotation -> stockQuotation.getStock_id())
-                .window(TumblingProcessingTimeWindows.of(Time.seconds(30)))
-                .reduce((ReduceFunction<StockQuotation>) (q1, q2) -> {
-                    if (q1.getKafka_offset() < q2.getKafka_offset()) {
-                        return q2;
-                    } else {
-                        return q1;
-                    }
-                });
+        var cashStream = getCashStream(stEnv);
+        var positionStream = getPositionStream(stEnv);
+        var quotationStream = getQuotationStream(stEnv);
 
         // 持仓关联报价
         var positionEtlStream = positionStream
@@ -134,8 +79,8 @@ public class Job {
         statementSet.execute();
     }
 
-    private static Table getCashTable(StreamTableEnvironment tEnv) {
-        tEnv.executeSql("" +
+    private static SingleOutputStreamOperator<Tuple2<Boolean, UserCash>> getCashStream(StreamTableEnvironment stEnv) {
+        stEnv.executeSql("" +
                 "CREATE TABLE kafka_user_cash (\n" +
                 "  uid INT NOT NULL,\n" +
                 "  cash_value double,\n" +
@@ -152,11 +97,34 @@ public class Job {
                 "  'value.format' = 'json'\n" +
                 ")" +
                 "");
-        return tEnv.sqlQuery("select * from kafka_user_cash");
+        var cashTable = stEnv.sqlQuery("select * from kafka_user_cash");
+        return stEnv
+                .toRetractStream(cashTable, UserCash.class)
+                .keyBy((KeySelector<Tuple2<Boolean, UserCash>, Integer>) cashTuple2 -> cashTuple2.f1.getUid())
+                .window(ProcessingTimeSessionWindows.withGap(Time.seconds(1)))
+                .reduce((ReduceFunction<Tuple2<Boolean, UserCash>>) (c1, c2) -> {
+                    Boolean dml1 = c1.f0;
+                    Boolean dml2 = c2.f0;
+                    UserCash cash1 = c1.f1;
+                    UserCash cash2 = c2.f1;
+                    if (cash1.getKafka_offset() < cash2.getKafka_offset()) {
+                        return c2;
+                    } else if (cash1.getKafka_offset() > cash2.getKafka_offset()) {
+                        return c1;
+                    } else {
+                        if (!dml1) {
+                            return c1;
+                        }
+                        if (!dml2) {
+                            return c2;
+                        }
+                        return c2;
+                    }
+                });
     }
 
-    private static Table getPositionTable(StreamTableEnvironment tEnv) {
-        tEnv.executeSql("" +
+    private static SingleOutputStreamOperator<Tuple2<Boolean, UserPosition>> getPositionStream(StreamTableEnvironment stEnv) {
+        stEnv.executeSql("" +
                 "CREATE TABLE kafka_user_position (\n" +
                 "  uid INT NOT NULL,\n" +
                 "  stock_id STRING NOT NULL,\n" +
@@ -174,11 +142,34 @@ public class Job {
                 "  'value.format' = 'json'\n" +
                 ")" +
                 "");
-        return tEnv.sqlQuery("select * from kafka_user_position");
+        var positionTable = stEnv.sqlQuery("select * from kafka_user_position");
+        return stEnv
+                .toRetractStream(positionTable, UserPosition.class)
+                .keyBy((KeySelector<Tuple2<Boolean, UserPosition>, Integer>) cashTuple2 -> cashTuple2.f1.getUid())
+                .window(ProcessingTimeSessionWindows.withGap(Time.seconds(1)))
+                .reduce((ReduceFunction<Tuple2<Boolean, UserPosition>>) (p1, p2) -> {
+                    Boolean dml1 = p1.f0;
+                    Boolean dml2 = p2.f0;
+                    UserPosition position1 = p1.f1;
+                    UserPosition postion2 = p2.f1;
+                    if (position1.getKafka_offset() < postion2.getKafka_offset()) {
+                        return p2;
+                    } else if (position1.getKafka_offset() > postion2.getKafka_offset()) {
+                        return p1;
+                    } else {
+                        if (!dml1) {
+                            return p1;
+                        }
+                        if (!dml2) {
+                            return p2;
+                        }
+                        return p2;
+                    }
+                });
     }
 
-    private static Table getQuotationTable(StreamTableEnvironment tEnv) {
-        tEnv.executeSql("" +
+    private static SingleOutputStreamOperator<StockQuotation> getQuotationStream(StreamTableEnvironment stEnv) {
+        stEnv.executeSql("" +
                 "CREATE TABLE kafka_stock_quotation (\n" +
                 " stock_id STRING NOT NULL,\n" +
                 " price double,\n" +
@@ -195,7 +186,19 @@ public class Job {
                 "  'value.format' = 'json'\n" +
                 ")" +
                 "");
-        return tEnv.sqlQuery("select * from kafka_stock_quotation");
+        var quotationTable = stEnv.sqlQuery("select * from kafka_stock_quotation");
+        return stEnv.toRetractStream(quotationTable, StockQuotation.class)
+                .filter((FilterFunction<Tuple2<Boolean, StockQuotation>>) quotationTuple2 -> quotationTuple2.f0)
+                .map((MapFunction<Tuple2<Boolean, StockQuotation>, StockQuotation>) quotationTuple2 -> quotationTuple2.f1)
+                .keyBy((KeySelector<StockQuotation, String>) stockQuotation -> stockQuotation.getStock_id())
+                .window(TumblingProcessingTimeWindows.of(Time.seconds(30)))
+                .reduce((ReduceFunction<StockQuotation>) (q1, q2) -> {
+                    if (q1.getKafka_offset() < q2.getKafka_offset()) {
+                        return q2;
+                    } else {
+                        return q1;
+                    }
+                });
     }
 
     private static void createSinkTable(StreamTableEnvironment tEnv) {
