@@ -25,7 +25,7 @@ public class Job {
     // 获取配置文件
     private static ParameterTool properties = PropertiesUtil.getProperties();
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         // 初始化环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration().set(RestOptions.PORT, properties.getInt("flink.webui.user_asset")));
         EnvironmentSettings settings = EnvironmentSettings
@@ -201,8 +201,8 @@ public class Job {
                 });
     }
 
-    private static void createSinkTable(StreamTableEnvironment tEnv) {
-        tEnv.executeSql("" +
+    private static void createSinkTable(StreamTableEnvironment stEnv) {
+        stEnv.executeSql("" +
                 "CREATE TABLE kafka_user_asset (\n" +
                 "  uid INT NOT NULL,\n" +
                 "  cash_value double,\n" +
@@ -217,7 +217,7 @@ public class Job {
                 "  'value.format' = 'json'\n" +
                 ")" +
                 "");
-        tEnv.executeSql("" +
+        stEnv.executeSql("" +
                 "CREATE TABLE mysql_user_asset (\n" +
                 "  uid INT NOT NULL,\n" +
                 "  cash_value double,\n" +
