@@ -1,7 +1,6 @@
 package asset.user_asset_snapshot;
 
 import asset.user_asset_snapshot.operators.OperatorBuilder;
-import common.pojo.StockQuotation;
 import common.pojo.UserAsset;
 import common.utils.PropertiesUtil;
 import lombok.var;
@@ -26,7 +25,7 @@ public class Job {
 
     public static void main(String[] args) {
         // 初始化环境
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration().set(RestOptions.PORT, properties.getInt("flink.webui.user_asset")));
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration().set(RestOptions.PORT, properties.getInt("flink.webui.user_asset_snapshot")));
         EnvironmentSettings settings = EnvironmentSettings
                 .newInstance()
                 .inStreamingMode()

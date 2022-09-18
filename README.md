@@ -30,7 +30,7 @@ CREATE TABLE `user_asset` (  `uid` int(64) NOT NULL,  `cash_value` double DEFAUL
 
 CREATE TABLE `user_profit` (  `uid` int(64) NOT NULL,  `profit_value` double DEFAULT NULL,  PRIMARY KEY (`uid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-CREATE TABLE `user_asset_snapshot` (  `uid` int(64) NOT NULL,  `ts` BIGINT DEFAULT NULL,  `asset` double DEFAULT NULL,  PRIMARY KEY (`uid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+CREATE TABLE `user_asset_snapshot` (  `uid` int(64) NOT NULL,  `ts` BIGINT DEFAULT NULL,  `asset` double DEFAULT NULL,  PRIMARY KEY (`uid`, `ts`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-CREATE TABLE `user_profit_snapshot` (  `uid` int(64) NOT NULL,  `ts` BIGINT DEFAULT NULL,  `profit` double DEFAULT NULL,  PRIMARY KEY (`uid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+CREATE TABLE `user_profit_snapshot` (  `uid` int(64) NOT NULL,  `ts` BIGINT DEFAULT NULL,  `profit` double DEFAULT NULL,  PRIMARY KEY (`uid`, `ts`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 ```

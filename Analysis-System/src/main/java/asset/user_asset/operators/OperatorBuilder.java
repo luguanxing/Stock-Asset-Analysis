@@ -23,8 +23,7 @@ public class OperatorBuilder {
             public void open(Configuration parameters) throws Exception {
                 super.open(parameters);
                 priceState = getRuntimeContext().getState(new ValueStateDescriptor<>("priceState", Double.class));
-                positionMapState = getRuntimeContext().getMapState(new MapStateDescriptor<>("positionMapState", TypeInformation.of(Integer.class), TypeInformation.of(new TypeHint<Tuple2<Boolean, UserPosition>>() {
-                })));
+                positionMapState = getRuntimeContext().getMapState(new MapStateDescriptor<>("positionMapState", TypeInformation.of(Integer.class), TypeInformation.of(new TypeHint<Tuple2<Boolean, UserPosition>>() {})));
             }
 
             @Override
