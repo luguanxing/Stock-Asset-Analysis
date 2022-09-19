@@ -36,7 +36,7 @@ public class Job {
         StatementSet statementSet = stEnv.createStatementSet();
         env.setParallelism(1);
 
-        // 读取实时数仓消息队列中钱和货数据，做session窗口保证数据稳定性
+        // 读取实时数仓消息队列中钱和货数据，做session窗口保证数据稳定性，抵消回撤流影响
         var cashStream = getCashStream(stEnv);
         var positionStream = getPositionStream(stEnv);
         var quotationStream = getQuotationStream(stEnv);
