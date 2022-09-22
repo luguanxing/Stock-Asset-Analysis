@@ -15,9 +15,24 @@ public class UserAccountDAO {
 
     }
 
-    public static void userBuyStock(Integer uid, String stockId, Double quantity) throws Exception {
+    public static void updateUserStockTrade(Integer uid, String stockId, Double quantity) throws Exception {
+        // buy or sell
+    }
+
+    public static void queryUserAsset(Integer uid) throws Exception {
 
     }
 
+    public static void queryUserAProfit(Integer uid) throws Exception {
+
+    }
+
+    public static void queryUserAssetSnapshot(Integer uid, Long startTs, Long endTs) throws Exception {
+
+    }
+
+    public static void queryUserProfitSnapshot(Integer uid, Long startTs, Long endTs) throws Exception {
+
+    }
 
 }
