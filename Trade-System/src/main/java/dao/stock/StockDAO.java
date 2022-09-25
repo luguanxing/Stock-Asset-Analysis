@@ -10,7 +10,7 @@ public class StockDAO {
     private static ResultSet rs;
 
     public static void upsertStockPrice(String stockId, Double price) throws Exception {
-        Class.forName("com.mysql.jdbc.Driver");
+        Class.forName("com.mysql.cj.jdbc.Driver");
         String jdbcUrl = String.format(
                 "jdbc:mysql://%s:%s/",
                 PropertiesUtil.getProperties().get("input.db.host"),
