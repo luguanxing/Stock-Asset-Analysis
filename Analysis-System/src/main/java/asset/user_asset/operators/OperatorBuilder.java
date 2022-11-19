@@ -68,13 +68,13 @@ public class OperatorBuilder {
     public static RichCoFlatMapFunction<Tuple2<Boolean, UserCash>, Tuple2<Boolean, UserPositionEtl>, UserAsset> calculateUserAsset() {
         return new RichCoFlatMapFunction<Tuple2<Boolean, UserCash>, Tuple2<Boolean, UserPositionEtl>, UserAsset>() {
             private ValueState<Double> cashState;
-            private ValueState<Double> positionState;
+            private MapState<String, Double> positionMapState;
 
             @Override
             public void open(Configuration parameters) throws Exception {
                 super.open(parameters);
                 cashState = getRuntimeContext().getState(new ValueStateDescriptor<>("cashState", Double.class));
-                positionState = getRuntimeContext().getState(new ValueStateDescriptor<>("positionState", Double.class));
+                positionMapState = getRuntimeContext().getMapState(new MapStateDescriptor<>("positionMapState", String.class, Double.class));
             }
 
             @Override
@@ -91,24 +91,28 @@ public class OperatorBuilder {
 
             @Override
             public void flatMap2(Tuple2<Boolean, UserPositionEtl> positionEtlTuple2, Collector<UserAsset> collector) throws Exception {
+                String stockId = positionEtlTuple2.f1.getStockId();
                 if (positionEtlTuple2.f0) {
                     // dml=set
-                    positionState.update(positionEtlTuple2.f1.getPosition_value());
+                    positionMapState.put(stockId, positionEtlTuple2.f1.getPosition_value());
                 } else {
                     // dml=del
-                    positionState.update(0.0);
+                    positionMapState.remove(stockId);
                 }
                 collector.collect(calculateAsset(positionEtlTuple2.f1.getUid()));
             }
 
             private UserAsset calculateAsset(Integer uid) throws Exception {
                 double cashValue = cashState.value() == null ? 0 : cashState.value();
-                double positionValue = positionState.value() == null ? 0 : positionState.value();
+                double positionValueTotal = 0;
+                for (Double positionValue : positionMapState.values()) {
+                    positionValueTotal += positionValue;
+                }
                 return new UserAsset(
                         uid,
                         cashValue,
-                        positionValue,
-                        cashValue + positionValue,
+                        positionValueTotal,
+                        cashValue + positionValueTotal,
                         String.format("%d%d", System.currentTimeMillis(), System.nanoTime())
                 );
             }

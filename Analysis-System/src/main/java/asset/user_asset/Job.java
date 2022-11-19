@@ -145,7 +145,7 @@ public class Job {
         var positionTable = stEnv.sqlQuery("select * from kafka_user_position");
         return stEnv
                 .toRetractStream(positionTable, UserPosition.class)
-                .keyBy((KeySelector<Tuple2<Boolean, UserPosition>, Integer>) cashTuple2 -> cashTuple2.f1.getUid())
+                .keyBy((KeySelector<Tuple2<Boolean, UserPosition>, String>) positionTuple2 -> positionTuple2.f1.getUid() + "-" + positionTuple2.f1.getStock_id())
                 .window(ProcessingTimeSessionWindows.withGap(Time.seconds(1)))
                 .reduce((ReduceFunction<Tuple2<Boolean, UserPosition>>) (p1, p2) -> {
                     Boolean dml1 = p1.f0;
